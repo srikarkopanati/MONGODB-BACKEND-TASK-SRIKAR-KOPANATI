@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Submission Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            max-width: 400px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .task-list {
+            margin-top: 20px;
+        }
+        .task-item {
+            margin-bottom: 10px;
+        }
+        .task-item button {
+            background-color: #f44336;
+        }
+        .task-item button.accept {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Assignment Submission Portal</h1>
+    <div class="form-container">
+        <h2>Register User</h2>
+        <input type="text" id="userId" placeholder="Enter User ID" />
+        <input type="password" id="userPassword" placeholder="Enter Password" />
+        <button onclick="registerUser()">Register</button>
+    </div>
+
+
+    <div class="form-container">
+        <h2>User Login</h2>
+        <input type="text" id="loginUserId" placeholder="Enter User ID" />
+        <input type="password" id="loginPassword" placeholder="Enter Password" />
+        <button onclick="loginUser()">Login</button>
+    </div>
+
+    <div class="form-container">
+        <h2>Upload Assignment</h2>
+        <input type="text" id="task" placeholder="Enter Task" />
+        <input type="text" id="admin" placeholder="Assign to Admin" />
+        <button onclick="uploadAssignment()">Upload Assignment</button>
+    </div>
+
+    <div class="form-container">
+        <h2>View Pending Assignments (Admin)</h2>
+        <input type="text" id="adminName" placeholder="Enter Admin Name" />
+        <button onclick="viewAssignments()">View Assignments</button>
+    </div>
+
+    <div class="task-list" id="taskList"></div>
+
+    <script>
+    
+        function registerUser() {
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('userPassword').value;
+            
+            fetch('http://localhost:8888/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, password })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message || data.error));
+        }
+
+    
+        function loginUser() {
+            const userId = document.getElementById('loginUserId').value;
+            const password = document.getElementById('loginPassword').value;
+
+            fetch('http://localhost:8888/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, password })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message || data.error));
+        }
+
+        function uploadAssignment() {
+            const userId = document.getElementById('userId').value;
+            const task = document.getElementById('task').value;
+            const admin = document.getElementById('admin').value;
+
+            fetch('http://localhost:8888/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, task, admin })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message || data.error));
+        }
+
+        function viewAssignments() {
+            const admin = document.getElementById('adminName').value;
+
+            fetch(`http://localhost:8888/admins?admin=${admin}`, {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = ''; 
+
+                data.tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.classList.add('task-item');
+                    taskItem.innerHTML = `
+                        <p><strong>User:</strong> ${task.userId}</p>
+                        <p><strong>Task:</strong> ${task.task}</p>
+                        <button class="accept" onclick="acceptAssignment('${task._id}')">Accept</button>
+                        <button onclick="rejectAssignment('${task._id}')">Reject</button>
+                    `;
+                    taskList.appendChild(taskItem);
+                });
+            });
+        }
+
+        function acceptAssignment(taskId) {
+            fetch(`http://localhost:8888/assignments/${taskId}/accept`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message || data.error));
+        }
+
+        function rejectAssignment(taskId) {
+            fetch(`http://localhost:8888/assignments/${taskId}/reject`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message || data.error));
+        }
+    </script>
+</body>
+</html>
